@@ -4,7 +4,7 @@ import http from 'http';
 import { connectDB } from './lib/bd.js';
 import userRouter from './routes/userRoutes.js';
 import messageRouter from './routes/messageRoutes.js';
-import server from "socket.io";
+import { Server } from "socket.io";
 
 
 
