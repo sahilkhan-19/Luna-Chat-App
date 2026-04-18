@@ -1,7 +1,7 @@
 import  { useState } from 'react'
 import assets from '../assets/assets'
 import { useContext } from 'react'
-import { AuthContext } from '../context/AuthContext'
+import { AuthContext } from '../../context/AuthContext'
 
 const LoginPage = () => {
 
@@ -20,7 +20,7 @@ const LoginPage = () => {
       setIsDataSubmitted(true)
       return;
     }
-    login(currState === "Sign up" ? "signup" : "login", {name, email, password, bio});
+    login(currState === "Sign up" ? "signup" : "login", { name: fullName, email, password, bio });
   }
 
   return (

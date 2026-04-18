@@ -24,8 +24,10 @@ export const signup = async (req, res) => {
         // Create new user
         const newUser = await User.create({ email, password: hashedPassword, name, bio: "" });
         const token = generateToken(newUser._id);
+        const userData = newUser.toObject();
+        delete userData.password;
 
-        res.status(201).json({ success: true, message: "User created successfully", userData: newUser, token });
+        res.status(201).json({ success: true, message: "User created successfully", userData, token });
     } catch (error) {
         console.error("Error in signup:", error);
         res.status(500).json({ success: false, message: "Internal server error" });
@@ -47,15 +49,16 @@ export const login = async (req, res) => {
         }
 
         // Check if password is correct
-        const isMatch = await bcrypt.compare(password, userData.password);
+        const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             return res.status(400).json({ success: false, message: "Invalid email or password" });
         }
 
-        // Generate token
-        const token = generateToken(userData._id);
+        const token = generateToken(user._id);
+        const userData = user.toObject();
+        delete userData.password;
 
-        res.status(200).json({ success: true, message: "Login successful", userData: user, token });
+        res.status(200).json({ success: true, message: "Login successful", userData, token });
     } catch (error) {
         console.error("Error in login:", error);
         res.status(500).json({ success: false, message: "Internal server error" });
@@ -70,11 +73,15 @@ export const updateProfile = async (req, res) => {
         let updatedUser;
 
         if(!profilePic){
-            updatedUser = await User.findByIdAndUpdate(userId, { name, bio }, { new: true });
+            updatedUser = await User.findByIdAndUpdate(userId, { name, bio }, { new: true }).select("-password");
         } else {
-            // Handle profile picture update logic here
             const upload = await cloudinary.uploader.upload(profilePic);
-            updatedUser = await User.findByIdAndUpdate(userId, { name, bio, profilePic: upload.secure_url }, { new: true });
+            // Schema field is `profilePicture` — `profilePic` is stripped by Mongoose strict mode
+            updatedUser = await User.findByIdAndUpdate(
+                userId,
+                { name, bio, profilePicture: upload.secure_url },
+                { new: true }
+            ).select("-password");
         }
 
         res.status(200).json({ success: true, message: "Profile updated successfully", userData: updatedUser });

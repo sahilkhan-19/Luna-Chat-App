@@ -28,8 +28,8 @@ io.on("connection", (socket) => {
     const userId = socket.handshake.query.userId;
     console.log(`User connected: ${userId}`);
 
-    if(userId) {
-        userSocketMap[userId] = socket.id;
+    if (userId) {
+        userSocketMap[String(userId)] = socket.id;
     }
     //Emit online users to all connected client
     io.emit("getOnlineUsers", Object.keys(userSocketMap));
@@ -37,7 +37,7 @@ io.on("connection", (socket) => {
     //Handle disconnection
     socket.on("disconnect", () => {
         console.log(`User disconnected: ${userId}`);
-        delete userSocketMap[userId];
+        delete userSocketMap[String(userId)];
         io.emit("getOnlineUsers", Object.keys(userSocketMap));
     });
 });
@@ -58,12 +58,12 @@ app.use("/api/auth", userRouter);
 //connect to database
 await connectDB();
 
-//start the server
-if(process.env.NODE_ENV !== "production") {
-    const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
+// Listen on VPS / Railway / Render / local. Vercel serverless sets VERCEL — no long-lived listen there.
+const PORT = process.env.PORT || 5000;
+if (!process.env.VERCEL) {
+  server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
-});
+  });
 }
 
 //Export server for vercel

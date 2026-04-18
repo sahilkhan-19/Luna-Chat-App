@@ -1,8 +1,8 @@
-import React, {useState} from 'react'
+import {useState} from 'react'
 import { useNavigate } from 'react-router-dom'
 import assets from '../assets/assets'
 import { useContext } from 'react'
-import { AuthContext } from '../context/AuthContext'
+import { AuthContext } from '../../context/AuthContext'
 
 const ProfilePage = () => {
 
@@ -10,8 +10,8 @@ const ProfilePage = () => {
 
   const [selectedImage, setSelectedImage] = useState(null)
   const navigate = useNavigate();
-  const [name, setName] = useState(authUser.name)
-  const [bio, setBio] = useState(authUser.bio)
+  const [name, setName] = useState(authUser?.name ?? '')
+  const [bio, setBio] = useState(authUser?.bio ?? '')
 
   const onSubmitHandler = async (event) => {
     event.preventDefault()
@@ -43,7 +43,7 @@ const ProfilePage = () => {
           <textarea onChange={(e) => setBio(e.target.value)} value={bio} required placeholder='your bio' className='p-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500' rows={4}/>
           <button type='submit' className='bg-violet-500 hover:bg-violet-600 text-white font-medium py-2 px-4 rounded-md cursor-pointer transition-colors duration-300'>Save</button>
         </form>
-        <img className={`max-w-44 aspect-square rounded-full mx-10 max-sm:mt-10 ${selectedImage && 'rounded-full'}`} src={authUser ?.profilePic ||assets.logo_icon} alt="" />   
+        <img className={`max-w-44 aspect-square rounded-full mx-10 max-sm:mt-10 ${selectedImage && 'rounded-full'}`} src={authUser?.profilePic || authUser?.profilePicture || assets.logo_icon} alt="" />   
       </div>
     </div>
   )

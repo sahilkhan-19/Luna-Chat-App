@@ -8,28 +8,28 @@ import { io, userSocketMap } from "../server.js";
 export const getUsersForSidebar = async (req, res) => {
     try {
         const userId = req.user._id;
-        const filteredUsers = await User.find({_id: {$ne: userId}}).select("-password");
-        res.status(200).json(filteredUsers);
+        const filteredUsers = await User.find({ _id: { $ne: userId } }).select("-password").lean();
 
-        //count no. of messages not seen
-        const unseenMessages = {}
-        const promises = filteredUsers.map(async (user) => {
-            const messages = await Message.find({
-                senderId: user._id,
-                receiverId: userId,
-                seen: false
-            });
-            if(messages.length > 0) {
-                unseenMessages[user._id] = messages.length;
-            }
-        });
-        await Promise.all(promises);
-        res.status(200).json({users: filteredUsers, unseenMessages});
+        const unseenMessages = {};
+        await Promise.all(
+            filteredUsers.map(async (user) => {
+                const count = await Message.countDocuments({
+                    senderId: user._id,
+                    receiverId: userId,
+                    seen: false,
+                });
+                if (count > 0) {
+                    unseenMessages[user._id.toString()] = count;
+                }
+            })
+        );
+
+        res.status(200).json({ success: true, users: filteredUsers, unseenMessages });
     } catch (error) {
         console.error(error);
-        res.status(500).json({message: "Server error"});
+        res.status(500).json({ message: "Server error" });
     }
-}
+};
 
 //get all messages for selected user
 
@@ -90,7 +90,7 @@ export const sendMessage = async (req, res) => {
         });
         
         //Emit the new message to the receiver's socket
-        const receiverSocketId = userSocketMap[receiverId];
+        const receiverSocketId = userSocketMap[String(receiverId)];
         if(receiverSocketId) {
             io.to(receiverSocketId).emit("newMessage", newMessage);
         }
